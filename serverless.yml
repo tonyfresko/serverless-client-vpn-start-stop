@@ -1,0 +1,36 @@
+service: client-vpn-start-stop
+provider:
+  name: aws
+  runtime: python3.6
+  stage: ${opt:stage, 'production'}
+  region: ${opt:region, 'eu-central-1'}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - ec2:DescribeClientVpnTargetNetworks
+        - ec2:DisassociateClientVpnTargetNetwork
+        - ec2:AssociateClientVpnTargetNetwork
+      Resource:
+        - '*'
+
+functions:
+  start-stop:
+    handler: handler.lambda_handler
+    environment:
+      # Change these to your values
+      CLIENT_VPN_ENDPOINT_ID: "endpoint-id"
+      # More subnets can be added with the variables SUBNET_2, SUBNET_3
+      SUBNET_1: "subnet-id-1"
+      # SUBNET_2: "subnet-id-2"
+    timeout: 15
+    events:
+      - schedule:
+          rate: cron(0 8 ? * MON-FRI *)
+          enabled: true
+          input:
+            start_or_stop: start
+      - schedule:
+          rate: cron(0 22 ? * MON-FRI *)
+          enabled: true
+          input:
+            start_or_stop: stop
